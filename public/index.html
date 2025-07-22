@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户端图像水印工具</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-water"></i> 客户端图像水印工具</h1>
+            <p>基于浏览器 Canvas API - 零服务器压力，保护隐私</p>
+            <div class="mode-badge">
+                <i class="fas fa-shield-alt"></i> 客户端处理模式
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- 处理模式说明 -->
+            <section class="info-section">
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> 处理模式说明</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-lock"></i>
+                            <h4>隐私保护</h4>
+                            <p>图片不会上传到服务器，所有处理都在您的浏览器中完成</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-bolt"></i>
+                            <h4>零服务器压力</h4>
+                            <p>服务器只提供静态文件服务，图像处理压力完全转移到客户端</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-eye"></i>
+                            <h4>实时预览</h4>
+                            <p>可以实时看到水印效果，无需等待上传处理</p>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-download"></i>
+                            <h4>直接下载</h4>
+                            <p>处理完成后可直接下载，无需经过服务器</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 图片选择区域 -->
+            <section class="upload-section">
+                <h2><i class="fas fa-images"></i> 选择图片</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>拖拽图片到此处或点击选择文件</p>
+                        <p class="upload-hint">支持 JPG, PNG, WebP, GIF 格式 - 所有处理都在您的浏览器中完成</p>
+                        <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-folder-open"></i> 选择文件
+                        </button>
+                    </div>
+                </div>
+                <div class="uploaded-files" id="uploadedFiles"></div>
+            </section>
+
+            <!-- 水印设置 -->
+            <section class="watermark-section">
+                <h2><i class="fas fa-cog"></i> 水印设置</h2>
+                
+                <div class="watermark-tabs">
+                    <button class="tab-btn active" data-tab="text">文字水印</button>
+                    <button class="tab-btn" data-tab="image">图片水印</button>
+                </div>
+
+                <div class="tab-content active" id="textTab">
+                    <div class="form-group">
+                        <label for="watermarkText">水印文字</label>
+                        <input type="text" id="watermarkText" placeholder="输入水印文字" value="© 2024">
+                    </div>
+                    
+                                    <div class="form-group">
+                    <label for="fontSize">字体大小</label>
+                    <input type="range" id="fontSize" min="12" max="72" value="24">
+                    <span class="range-value" id="fontSizeValue">24</span>
+                </div>
+                    
+                    <div class="form-group">
+                        <label for="textColor">文字颜色</label>
+                        <input type="color" id="textColor" value="#ffffff">
+                    </div>
+                </div>
+
+                <div class="tab-content" id="imageTab">
+                    <div class="form-group">
+                        <label for="watermarkImage">水印图片</label>
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <div class="image-upload-content">
+                                <i class="fas fa-image"></i>
+                                <p>点击上传水印图片</p>
+                                <input type="file" id="watermarkInput" accept="image/*" style="display: none;">
+                                <button class="upload-btn" onclick="document.getElementById('watermarkInput').click()">
+                                    <i class="fas fa-upload"></i> 上传水印
+                                </button>
+                            </div>
+                        </div>
+                        <div class="watermark-preview" id="watermarkPreview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="opacity">透明度</label>
+                        <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="0.7">
+                        <span class="range-value" id="opacityValue">0.7</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="position">水印位置</label>
+                    <select id="position">
+                        <option value="bottom-right">右下角</option>
+                        <option value="bottom-left">左下角</option>
+                        <option value="top-right">右上角</option>
+                        <option value="top-left">左上角</option>
+                        <option value="center">居中</option>
+                        <option value="full-cover">全覆盖模式</option>
+                    </select>
+                </div>
+
+                <!-- 全覆盖模式配置 -->
+                <div class="full-cover-settings" id="fullCoverSettings" style="display: none;">
+                    <h3><i class="fas fa-cogs"></i> 全覆盖模式配置</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="coverPattern">覆盖模式</label>
+                            <select id="coverPattern">
+                                <option value="grid">网格模式</option>
+                                <option value="diagonal">斜向模式</option>
+                                <option value="random">随机模式</option>
+                                <option value="spiral">螺旋模式</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="coverDensity">密集度</label>
+                            <input type="range" id="coverDensity" min="1" max="10" value="5">
+                            <span class="range-value" id="coverDensityValue">5</span>
+                        </div>
+                    </div>
+                    
+
+                    
+
+                </div>
+            </section>
+
+            <!-- 处理按钮 -->
+            <section class="process-section">
+                <button class="process-btn" id="processBtn" disabled>
+                    <i class="fas fa-magic"></i> 开始处理
+                </button>
+                <div class="process-status" id="processStatus"></div>
+            </section>
+
+            <!-- 结果展示 -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <h2><i class="fas fa-check-circle"></i> 处理结果</h2>
+                <div class="results-grid" id="resultsGrid"></div>
+                <div class="download-all">
+                    <button class="download-btn" id="downloadAllBtn">
+                        <i class="fas fa-download"></i> 下载所有图片
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>正在处理图片...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
